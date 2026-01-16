@@ -155,7 +155,12 @@ async function onSearch() {
   const search = await loadSearch();
   let items: DocfindResult[] = [];
   if (search) {
-    items = await search(needle);
+    try {
+      items = await search(needle);
+    } catch {
+      searchModule = null;
+      items = [];
+    }
   }
   if (!items.length) {
     items = await fallbackSearch(needle);
