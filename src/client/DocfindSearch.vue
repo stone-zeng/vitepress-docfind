@@ -15,7 +15,11 @@
         class="docfind-item"
         :class="itemClass"
       >
-        <a :href="item.href" class="docfind-link" :class="linkClass">
+        <a
+          :href="resolveHref(item.href)"
+          class="docfind-link"
+          :class="linkClass"
+        >
           <span class="docfind-title" v-html="highlight(item.title)"></span>
           <span
             v-if="item.category"
@@ -85,6 +89,7 @@ const errorMessage = ref("");
 
 const indexUrl = computed(() => props.indexBase.replace(/\/$/, ""));
 const markClass = "docfind-highlight";
+const siteBase = import.meta.env.BASE_URL;
 
 let searchModule: ((query: string) => Promise<DocfindResult[]>) | null = null;
 let documentsCache: DocfindDocument[] | null = null;
@@ -184,6 +189,14 @@ function highlight(value: string) {
     pattern,
     (match) => `<mark class="${markClass}">${match}</mark>`
   );
+}
+
+function resolveHref(href: string) {
+  if (/^https?:\/\//.test(href)) return href;
+  if (href.startsWith(siteBase)) return href;
+  const base = siteBase.endsWith("/") ? siteBase.slice(0, -1) : siteBase;
+  if (href.startsWith("/")) return `${base}${href}`;
+  return `${siteBase}${href}`;
 }
 
 function buildSnippet(body: string, needle: string) {
