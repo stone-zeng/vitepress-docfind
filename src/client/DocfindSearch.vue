@@ -66,7 +66,7 @@ const props = withDefaults(
     placeholder: "Search docs",
     limit: 10,
     emptyText: "No results",
-    errorText: "Search index not found. Run docs:build."
+    errorText: "Search index not found. Run docs:build.",
   }
 );
 
@@ -109,7 +109,9 @@ async function fallbackSearch(needle: string) {
   if (!documents) return [];
   const term = needle.toLowerCase();
   const matches = documents.filter((doc) => {
-    const haystack = `${doc.title} ${doc.category ?? ""} ${doc.body}`.toLowerCase();
+    const haystack = `${doc.title} ${doc.category ?? ""} ${
+      doc.body
+    }`.toLowerCase();
     return haystack.includes(term);
   });
   return matches.map((doc) => ({
@@ -158,7 +160,10 @@ function highlight(value: string) {
   const needle = query.value.trim();
   if (!needle) return text;
   const pattern = new RegExp(escapeRegExp(needle), "gi");
-  return text.replace(pattern, (match) => `<mark class="${markClass}">${match}</mark>`);
+  return text.replace(
+    pattern,
+    (match) => `<mark class="${markClass}">${match}</mark>`
+  );
 }
 </script>
 

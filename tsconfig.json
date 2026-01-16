@@ -13,7 +13,8 @@
         "skipLibCheck": true,
         "outDir": "dist",
         "types": [
-            "node"
+            "node",
+            "vite/client"
         ]
     },
     "include": [
