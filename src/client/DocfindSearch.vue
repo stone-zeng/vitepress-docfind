@@ -16,10 +16,12 @@
         :class="itemClass"
       >
         <a :href="item.href" class="docfind-link" :class="linkClass">
-          <span class="docfind-title">{{ item.title }}</span>
-          <span v-if="item.category" class="docfind-category">{{
-            item.category
-          }}</span>
+          <span class="docfind-title" v-html="highlight(item.title)"></span>
+          <span
+            v-if="item.category"
+            class="docfind-category"
+            v-html="highlight(item.category)"
+          ></span>
         </a>
       </li>
     </ul>
@@ -69,6 +71,7 @@ const results = ref<DocfindResult[]>([]);
 const errorMessage = ref("");
 
 const indexUrl = computed(() => props.indexBase.replace(/\/$/, ""));
+const markClass = "docfind-highlight";
 
 let searchModule: ((query: string) => Promise<DocfindResult[]>) | null = null;
 
@@ -94,6 +97,27 @@ async function onSearch() {
   if (!search) return;
   const items = await search(query.value.trim());
   results.value = items.slice(0, props.limit);
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlight(value: string) {
+  const text = escapeHtml(value);
+  const needle = query.value.trim();
+  if (!needle) return text;
+  const pattern = new RegExp(escapeRegExp(needle), "gi");
+  return text.replace(pattern, (match) => `<mark class="${markClass}">${match}</mark>`);
 }
 </script>
 
@@ -140,6 +164,13 @@ async function onSearch() {
 .docfind-category {
   font-size: 0.8rem;
   color: var(--vp-c-text-2, #666);
+}
+
+.docfind-highlight {
+  background: rgba(250, 204, 21, 0.35);
+  color: inherit;
+  border-radius: 0.2rem;
+  padding: 0 0.15rem;
 }
 
 .docfind-empty {
