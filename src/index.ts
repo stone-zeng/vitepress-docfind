@@ -82,7 +82,7 @@ async function collectDocuments(options: Required<DocfindPluginOptions>) {
     const category =
       typeof parsed.data?.category === "string"
         ? parsed.data.category
-        : undefined;
+        : "docs";
     const href = fileToHref(entry, base, options.cleanUrls);
     documents.push({ title, category, href, body: parsed.content.trim() });
   }
