@@ -6,7 +6,7 @@
 
 - [x] Customize the Project
 
-- [ ] Install Required Extensions
+- [x] Install Required Extensions
 
 - [ ] Compile the Project
 
