@@ -44,3 +44,5 @@ The demo lives in the docs folder and uses VitePress.
 ```bash
 pnpm docs:dev
 ```
+
+Search index files are generated on docs:build.

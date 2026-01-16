@@ -23,6 +23,9 @@
         </a>
       </li>
     </ul>
+    <p v-else-if="errorMessage" class="docfind-empty" :class="emptyClass">
+      {{ errorMessage }}
+    </p>
     <p v-else-if="query" class="docfind-empty" :class="emptyClass">
       {{ emptyText }}
     </p>
@@ -44,6 +47,7 @@ const props = withDefaults(
     placeholder?: string;
     limit?: number;
     emptyText?: string;
+    errorText?: string;
     rootClass?: string;
     inputClass?: string;
     listClass?: string;
@@ -56,11 +60,13 @@ const props = withDefaults(
     placeholder: "Search docs",
     limit: 10,
     emptyText: "No results",
+    errorText: "Search index not found. Run docs:build."
   }
 );
 
 const query = ref("");
 const results = ref<DocfindResult[]>([]);
+const errorMessage = ref("");
 
 const indexUrl = computed(() => props.indexBase.replace(/\/$/, ""));
 
@@ -68,17 +74,24 @@ let searchModule: ((query: string) => Promise<DocfindResult[]>) | null = null;
 
 async function loadSearch() {
   if (searchModule) return searchModule;
-  const mod = await import(/* @vite-ignore */ `${indexUrl.value}/docfind.js`);
-  searchModule = mod.default as (query: string) => Promise<DocfindResult[]>;
-  return searchModule;
+  try {
+    const mod = await import(/* @vite-ignore */ `${indexUrl.value}/docfind.js`);
+    searchModule = mod.default as (query: string) => Promise<DocfindResult[]>;
+    return searchModule;
+  } catch {
+    errorMessage.value = props.errorText;
+    return null;
+  }
 }
 
 async function onSearch() {
+  errorMessage.value = "";
   if (!query.value.trim()) {
     results.value = [];
     return;
   }
   const search = await loadSearch();
+  if (!search) return;
   const items = await search(query.value.trim());
   results.value = items.slice(0, props.limit);
 }
