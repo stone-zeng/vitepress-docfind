@@ -43,6 +43,10 @@ export type DocfindResult = {
   href: string;
 };
 
+type DocfindDocument = DocfindResult & {
+  body: string;
+};
+
 const props = withDefaults(
   defineProps<{
     indexBase?: string;
@@ -74,6 +78,7 @@ const indexUrl = computed(() => props.indexBase.replace(/\/$/, ""));
 const markClass = "docfind-highlight";
 
 let searchModule: ((query: string) => Promise<DocfindResult[]>) | null = null;
+let documentsCache: DocfindDocument[] | null = null;
 
 async function loadSearch() {
   if (searchModule) return searchModule;
@@ -82,20 +87,56 @@ async function loadSearch() {
     searchModule = mod.default as (query: string) => Promise<DocfindResult[]>;
     return searchModule;
   } catch {
-    errorMessage.value = props.errorText;
     return null;
   }
 }
 
+async function loadDocuments() {
+  if (documentsCache) return documentsCache;
+  try {
+    const response = await fetch(`${indexUrl.value}/documents.json`);
+    if (!response.ok) return null;
+    const data = (await response.json()) as DocfindDocument[];
+    documentsCache = data;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+async function fallbackSearch(needle: string) {
+  const documents = await loadDocuments();
+  if (!documents) return [];
+  const term = needle.toLowerCase();
+  const matches = documents.filter((doc) => {
+    const haystack = `${doc.title} ${doc.category ?? ""} ${doc.body}`.toLowerCase();
+    return haystack.includes(term);
+  });
+  return matches.map((doc) => ({
+    title: doc.title,
+    category: doc.category,
+    href: doc.href,
+  }));
+}
+
 async function onSearch() {
   errorMessage.value = "";
-  if (!query.value.trim()) {
+  const needle = query.value.trim();
+  if (!needle) {
     results.value = [];
     return;
   }
   const search = await loadSearch();
-  if (!search) return;
-  const items = await search(query.value.trim());
+  let items: DocfindResult[] = [];
+  if (search) {
+    items = await search(needle);
+  }
+  if (!items.length) {
+    items = await fallbackSearch(needle);
+  }
+  if (!items.length && !search) {
+    errorMessage.value = props.errorText;
+  }
   results.value = items.slice(0, props.limit);
 }
 
