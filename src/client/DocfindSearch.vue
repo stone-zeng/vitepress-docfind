@@ -22,6 +22,11 @@
             class="docfind-category"
             v-html="highlight(item.category)"
           ></span>
+          <span
+            v-if="item.snippet"
+            class="docfind-snippet"
+            v-html="item.snippet"
+          ></span>
         </a>
       </li>
     </ul>
@@ -45,6 +50,10 @@ export type DocfindResult = {
 
 type DocfindDocument = DocfindResult & {
   body: string;
+};
+
+type DocfindResultView = DocfindResult & {
+  snippet?: string;
 };
 
 const props = withDefaults(
@@ -71,7 +80,7 @@ const props = withDefaults(
 );
 
 const query = ref("");
-const results = ref<DocfindResult[]>([]);
+const results = ref<DocfindResultView[]>([]);
 const errorMessage = ref("");
 
 const indexUrl = computed(() => props.indexBase.replace(/\/$/, ""));
@@ -121,6 +130,16 @@ async function fallbackSearch(needle: string) {
   }));
 }
 
+async function enrichResults(items: DocfindResult[], needle: string) {
+  const documents = await loadDocuments();
+  if (!documents) return items.map((item) => ({ ...item }));
+  return items.map((item) => {
+    const doc = documents.find((entry) => entry.href === item.href);
+    const snippet = doc ? buildSnippet(doc.body, needle) : undefined;
+    return { ...item, snippet };
+  });
+}
+
 async function onSearch() {
   errorMessage.value = "";
   const needle = query.value.trim();
@@ -136,10 +155,11 @@ async function onSearch() {
   if (!items.length) {
     items = await fallbackSearch(needle);
   }
+  const enriched = await enrichResults(items, needle);
   if (!items.length && !search) {
     errorMessage.value = props.errorText;
   }
-  results.value = items.slice(0, props.limit);
+  results.value = enriched.slice(0, props.limit);
 }
 
 function escapeHtml(value: string) {
@@ -164,6 +184,21 @@ function highlight(value: string) {
     pattern,
     (match) => `<mark class="${markClass}">${match}</mark>`
   );
+}
+
+function buildSnippet(body: string, needle: string) {
+  const clean = body.replace(/\s+/g, " ").trim();
+  if (!needle) return escapeHtml(clean.slice(0, 160));
+  const lower = clean.toLowerCase();
+  const term = needle.toLowerCase();
+  const index = lower.indexOf(term);
+  if (index === -1) return escapeHtml(clean.slice(0, 160));
+  const start = Math.max(0, index - 60);
+  const end = Math.min(clean.length, index + term.length + 60);
+  const prefix = start > 0 ? "…" : "";
+  const suffix = end < clean.length ? "…" : "";
+  const slice = clean.slice(start, end);
+  return `${prefix}${highlight(slice)}${suffix}`;
 }
 </script>
 
@@ -210,6 +245,12 @@ function highlight(value: string) {
 .docfind-category {
   font-size: 0.8rem;
   color: var(--vp-c-text-2, #666);
+}
+
+.docfind-snippet {
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2, #666);
+  line-height: 1.4;
 }
 
 .docfind-highlight {
