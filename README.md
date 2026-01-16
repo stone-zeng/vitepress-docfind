@@ -17,9 +17,9 @@ import { defineConfig } from 'vitepress';
 import { docfindPlugin } from 'vitepress-docfind';
 
 export default defineConfig({
-	vite: {
-		plugins: [docfindPlugin()]
-	}
+  vite: {
+    plugins: [docfindPlugin()]
+  }
 });
 ```
 
@@ -31,9 +31,9 @@ export default defineConfig({
 
 ```vue
 <DocfindSearch
-	root-class="mt-6"
-	input-class="border-slate-400"
-	item-class="border-slate-200"
+  root-class="mt-6"
+  input-class="border-slate-400"
+  item-class="border-slate-200"
 />
 ```
 

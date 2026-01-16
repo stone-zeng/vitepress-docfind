@@ -11,9 +11,9 @@ import { defineConfig } from "vitepress";
 import { docfindPlugin } from "vitepress-docfind";
 
 export default defineConfig({
-	vite: {
-		plugins: [docfindPlugin()],
-	},
+  vite: {
+    plugins: [docfindPlugin()],
+  },
 });
 ```
 
@@ -23,10 +23,10 @@ import DocfindSearch from "vitepress-docfind/component";
 import type { Theme } from "vitepress";
 
 export default {
-	extends: DefaultTheme,
-	enhanceApp({ app }) {
-		app.component("DocfindSearch", DocfindSearch);
-	},
+  extends: DefaultTheme,
+  enhanceApp({ app }) {
+    app.component("DocfindSearch", DocfindSearch);
+  },
 } satisfies Theme;
 ```
 
