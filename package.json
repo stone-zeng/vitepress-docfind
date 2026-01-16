@@ -1,0 +1,36 @@
+{
+  "name": "vitepress-docfind",
+  "version": "0.1.0",
+  "description": "Docfind integration for VitePress.",
+  "type": "module",
+  "files": [
+    "dist",
+    "src/client",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./component": "./src/client/DocfindSearch.vue"
+  },
+  "scripts": {
+    "build": "tsup",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.2",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5",
+    "vitepress": "^1.2.2",
+    "vue": "^3.4.27"
+  }
+}

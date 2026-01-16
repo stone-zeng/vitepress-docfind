@@ -2,7 +2,7 @@
 
 - [x] Clarify Project Requirements
 
-- [ ] Scaffold the Project
+- [x] Scaffold the Project
 
 - [ ] Customize the Project
 
