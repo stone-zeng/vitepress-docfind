@@ -1,0 +1,37 @@
+name: Docs Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install docfind
+        run: curl -fsSL https://microsoft.github.io/docfind/install.sh | sh
+
+      - name: Build package
+        run: pnpm build
+
+      - name: Build docs
+        run: pnpm docs:build
