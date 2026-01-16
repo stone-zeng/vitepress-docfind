@@ -6,6 +6,10 @@ Docfind integration for VitePress.
 
 Install the docfind CLI and this package.
 
+```bash
+pnpm add vitepress-docfind
+```
+
 ## VitePress config
 
 ```ts

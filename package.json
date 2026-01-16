@@ -22,6 +22,7 @@
         "docs:build": "vitepress build docs",
         "docs:preview": "vitepress preview docs"
     },
+    "packageManager": "pnpm@10.27.0",
     "dependencies": {
         "fast-glob": "^3.3.2",
         "gray-matter": "^4.0.3"

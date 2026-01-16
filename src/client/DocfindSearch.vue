@@ -9,10 +9,17 @@
       @input="onSearch"
     />
     <ul v-if="results.length" class="docfind-results" :class="listClass">
-      <li v-for="item in results" :key="item.href" class="docfind-item" :class="itemClass">
+      <li
+        v-for="item in results"
+        :key="item.href"
+        class="docfind-item"
+        :class="itemClass"
+      >
         <a :href="item.href" class="docfind-link" :class="linkClass">
           <span class="docfind-title">{{ item.title }}</span>
-          <span v-if="item.category" class="docfind-category">{{ item.category }}</span>
+          <span v-if="item.category" class="docfind-category">{{
+            item.category
+          }}</span>
         </a>
       </li>
     </ul>
@@ -23,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref } from "vue";
 
 export type DocfindResult = {
   title: string;
@@ -46,16 +53,16 @@ const props = withDefaults(
   }>(),
   {
     indexBase: `${import.meta.env.BASE_URL}docfind`,
-    placeholder: 'Search docs',
+    placeholder: "Search docs",
     limit: 10,
-    emptyText: 'No results'
+    emptyText: "No results",
   }
 );
 
-const query = ref('');
+const query = ref("");
 const results = ref<DocfindResult[]>([]);
 
-const indexUrl = computed(() => props.indexBase.replace(/\/$/, ''));
+const indexUrl = computed(() => props.indexBase.replace(/\/$/, ""));
 
 let searchModule: ((query: string) => Promise<DocfindResult[]>) | null = null;
 

@@ -8,7 +8,7 @@
 
 - [x] Install Required Extensions
 
-- [ ] Compile the Project
+- [x] Compile the Project
 
 - [ ] Create and Run Task
 
