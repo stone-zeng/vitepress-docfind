@@ -24,6 +24,6 @@ export default defineConfig({
     ],
   },
   vite: {
-    plugins: [docfindPlugin()],
+    plugins: [docfindPlugin({ base: "/vitepress-docfind/" })],
   },
 });
