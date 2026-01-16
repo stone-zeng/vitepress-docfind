@@ -1,20 +1,24 @@
 <template>
-  <div class="docfind">
+  <div class="docfind" :class="rootClass">
     <input
       v-model="query"
       type="search"
       class="docfind-input"
+      :class="inputClass"
       :placeholder="placeholder"
       @input="onSearch"
     />
-    <ul v-if="results.length" class="docfind-results">
-      <li v-for="item in results" :key="item.href" class="docfind-item">
-        <a :href="item.href" class="docfind-link">
+    <ul v-if="results.length" class="docfind-results" :class="listClass">
+      <li v-for="item in results" :key="item.href" class="docfind-item" :class="itemClass">
+        <a :href="item.href" class="docfind-link" :class="linkClass">
           <span class="docfind-title">{{ item.title }}</span>
           <span v-if="item.category" class="docfind-category">{{ item.category }}</span>
         </a>
       </li>
     </ul>
+    <p v-else-if="query" class="docfind-empty" :class="emptyClass">
+      {{ emptyText }}
+    </p>
   </div>
 </template>
 
@@ -32,11 +36,19 @@ const props = withDefaults(
     indexBase?: string;
     placeholder?: string;
     limit?: number;
+    emptyText?: string;
+    rootClass?: string;
+    inputClass?: string;
+    listClass?: string;
+    itemClass?: string;
+    linkClass?: string;
+    emptyClass?: string;
   }>(),
   {
-    indexBase: '/docfind',
+    indexBase: `${import.meta.env.BASE_URL}docfind`,
     placeholder: 'Search docs',
-    limit: 10
+    limit: 10,
+    emptyText: 'No results'
   }
 );
 
@@ -107,6 +119,11 @@ async function onSearch() {
 
 .docfind-category {
   font-size: 0.8rem;
+  color: var(--vp-c-text-2, #666);
+}
+
+.docfind-empty {
+  font-size: 0.9rem;
   color: var(--vp-c-text-2, #666);
 }
 </style>

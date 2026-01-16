@@ -4,7 +4,7 @@
 
 - [x] Scaffold the Project
 
-- [ ] Customize the Project
+- [x] Customize the Project
 
 - [ ] Install Required Extensions
 
