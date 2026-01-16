@@ -2,6 +2,7 @@ import { defineConfig } from "vitepress";
 import { docfindPlugin } from "../../src/index";
 
 export default defineConfig({
+  base: "/vitepress-docfind/",
   title: "Docfind Demo",
   description: "VitePress with Docfind search",
   themeConfig: {
