@@ -90,6 +90,21 @@ async function collectDocuments(options: Required<DocfindPluginOptions>) {
   return documents;
 }
 
+async function buildIndex(options: Required<DocfindPluginOptions>, targetDir: string) {
+  const documents = await collectDocuments(options);
+  const documentsPath = path.join(targetDir, "documents.json");
+  await fs.mkdir(targetDir, { recursive: true });
+  await fs.writeFile(documentsPath, JSON.stringify(documents, null, 2));
+  await runDocfind(documentsPath, targetDir);
+}
+
+function getContentType(filePath: string) {
+  if (filePath.endsWith(".js")) return "text/javascript";
+  if (filePath.endsWith(".wasm")) return "application/wasm";
+  if (filePath.endsWith(".json")) return "application/json";
+  return "application/octet-stream";
+}
+
 export function docfindPlugin(options: DocfindPluginOptions = {}): Plugin {
   const cwd = process.cwd();
   const resolvedDocsDir = path.resolve(cwd, options.docsDir ?? "docs");
@@ -101,6 +116,10 @@ export function docfindPlugin(options: DocfindPluginOptions = {}): Plugin {
     cwd,
     options.indexDir ?? path.join(resolvedOutDir, "docfind")
   );
+  const resolvedDevIndexDir = path.resolve(
+    cwd,
+    options.indexDir ?? path.join(resolvedDocsDir, ".vitepress/cache/docfind")
+  );
   const resolvedOptions: Required<DocfindPluginOptions> = {
     docsDir: resolvedDocsDir,
     outDir: resolvedOutDir,
@@ -110,17 +129,70 @@ export function docfindPlugin(options: DocfindPluginOptions = {}): Plugin {
     include: options.include ?? ["**/*.md"],
     exclude: options.exclude ?? defaultExclude,
   };
+  const basePath = resolveBase(resolvedOptions.base);
+  const indexMount = `${basePath}/docfind/`;
 
   return {
     name: "vitepress-docfind",
-    apply: "build",
+    async configureServer(server) {
+      const logger = server.config.logger;
+      let building = false;
+      let pending = false;
+
+      const rebuild = async () => {
+        if (building) {
+          pending = true;
+          return;
+        }
+        building = true;
+        try {
+          await buildIndex(resolvedOptions, resolvedDevIndexDir);
+          logger.info("docfind: index updated");
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          logger.error(`docfind: ${message}`);
+        } finally {
+          building = false;
+          if (pending) {
+            pending = false;
+            await rebuild();
+          }
+        }
+      };
+
+      server.watcher.on("add", (file) => {
+        if (file.startsWith(resolvedDocsDir) && file.endsWith(".md")) rebuild();
+      });
+      server.watcher.on("change", (file) => {
+        if (file.startsWith(resolvedDocsDir) && file.endsWith(".md")) rebuild();
+      });
+      server.watcher.on("unlink", (file) => {
+        if (file.startsWith(resolvedDocsDir) && file.endsWith(".md")) rebuild();
+      });
+
+      await rebuild();
+
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url) return next();
+        const url = req.url.split("?")[0];
+        if (!url.startsWith(indexMount)) return next();
+        const relPath = decodeURIComponent(url.slice(indexMount.length));
+        const filePath = path.join(resolvedDevIndexDir, relPath);
+        if (!filePath.startsWith(resolvedDevIndexDir)) return next();
+        try {
+          const data = await fs.readFile(filePath);
+          res.statusCode = 200;
+          res.setHeader("Content-Type", getContentType(filePath));
+          res.end(data);
+        } catch {
+          res.statusCode = 404;
+          res.end();
+        }
+      });
+    },
     async closeBundle() {
-      const documents = await collectDocuments(resolvedOptions);
-      const documentsPath = path.join(resolvedIndexDir, "documents.json");
-      await fs.mkdir(resolvedIndexDir, { recursive: true });
-      await fs.writeFile(documentsPath, JSON.stringify(documents, null, 2));
       try {
-        await runDocfind(documentsPath, resolvedIndexDir);
+        await buildIndex(resolvedOptions, resolvedIndexDir);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`docfind failed: ${message}`);
